@@ -401,16 +401,24 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 
 
 void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
-/* const int l, const int k){ */
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3 v1,v2;
+  su3_vector psia,psib,phia,phib;
+  spinor rr;
+#else
+  static su3 v1,v2;
+  static su3_vector psia,psib,phia,phib;
+  static spinor rr;
+#endif
+
   int ix,iy;
   int ioff, icx, icy;
   su3 * restrict up ALIGN;
   su3 * restrict um ALIGN;
 /*   su3adj * restrict ddd; */
 /*   static su3adj der; */
-  static su3 v1,v2;
-  static su3_vector psia,psib,phia,phib;
-  static spinor rr;
 /*   spinor * restrict r ALIGN; */
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
@@ -434,6 +442,11 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     ioff=(VOLUME+RAND)/2;
   } 
 
+#ifdef OMP
+#pragma omp single
+{
+#endif
+
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(hf->gaugefield);
@@ -443,8 +456,15 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #ifdef MPI
   xchange_2fields(k, l, ieo);
 #endif
-  /************** loop over all lattice sites ****************/
 
+#ifdef OMP
+}
+#endif
+
+  /************** loop over all lattice sites ****************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
     ix=g_eo2lexic[icx];
     rr = (*(l + (icx-ioff)));
@@ -628,6 +648,9 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
   }
 #ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb)
+#endif
+#ifdef OMP
+  } /* OpenMP closing brace */
 #endif
 }
 
