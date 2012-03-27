@@ -3016,7 +3016,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 }
 #  elif defined XLC
 
+#ifndef OMP 
 static su3_vector psi1, psi2, psi, chi, phi1, phi3;
+#endif
 
 #include"xlc_prefetch.h"
 
@@ -3024,12 +3026,23 @@ static su3_vector psi1, psi2, psi, chi, phi1, phi3;
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
+#ifdef OMP
+#pragma omp parallel
+  {
+  su3_vector psi1, psi2, psi, chi, phi1, phi3;
+  int iyup, icyup;
+#endif
   int ix, iy, iz;
   int ioff, ioff2, icx, icy, icz;
   su3 * restrict up, * restrict um;
   spinor * restrict r,* restrict sp,* restrict sm;
   spinor temp;
 #pragma disjoint(temp, *sp, *sm, *r, *up, *um)
+
+#ifdef OMP
+#pragma omp single
+{
+#endif
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
@@ -3041,6 +3054,10 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #    if (defined MPI && !(defined _NO_COMM))
   xchange_field(k, ieo);
 #    endif
+
+#ifdef OMP
+}
+#endif
 
   if(k == l){
     printf("Error in H_psi (simple.c):\n");
@@ -3057,6 +3074,8 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   ioff2 = (VOLUME+RAND)/2-ioff;
   /**************** loop over all lattice sites ****************/
 
+
+#ifndef OMP
   ix = g_eo2lexic[ioff];
 
   iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
@@ -3067,8 +3086,27 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #    else
   up=&g_gauge_field[ix][0];
 #    endif
+#endif
+
+#ifdef OMP
+#pragma omp for
+#endif
   for (icx = ioff; icx < (VOLUME/2 + ioff); icx++) {
     ix = g_eo2lexic[icx];
+
+#ifdef OMP
+    iyup=g_iup[ix][0]; 
+    icyup=g_lexi2eosub[iyup];
+    sp=k+icyup;
+    /* I'm not sure whether this should be prefetched here! */
+    //_prefetch_spinor((void*)sp);
+#  if ((defined _GAUGE_COPY))
+    up=&g_gauge_field_copy[icx][0];
+#  else
+    up=&g_gauge_field[ix][0];
+#  endif
+#endif
+
     /*********************** direction +0 ************************/
     
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
@@ -3313,7 +3351,10 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
     /************************ end of loop ************************/
   }
-}
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+} 
 
 
 /* else of If defined SSE2  and if defined XLC */
