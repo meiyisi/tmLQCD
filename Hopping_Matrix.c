@@ -2215,6 +2215,14 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 /* 5. */
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+#ifdef OMP
+#pragma omp parallel
+  {
+  spinor rs;
+  int iyup,icyup;
+#else
+  static spinor rs;
+#endif
   int icx,icy,icz,ioff,ioff2;
   int ix,iy,iz;
   su3 *restrict up;
@@ -2222,9 +2230,14 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   spinor * restrict sp;
   spinor * restrict sm;
   spinor * restrict rn;
-  static spinor rs;
   
   /* for parallelization */
+
+#ifdef OMP
+#pragma omp single
+{
+#endif
+
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(g_gauge_field);
@@ -2234,6 +2247,10 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    if (defined MPI && !defined _NO_COMM)
   xchange_field(k, ieo);
 #    endif
+
+#ifdef OMP
+} /* omp single closing brace */
+#endif
 
   if(k == l){
     printf("Error in subroutine D_psi: improper arguments\n");
@@ -2248,6 +2265,8 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   }
   ioff2 = (VOLUME+RAND)/2-ioff;
 
+
+#ifndef OMP
   ix=g_eo2lexic[ioff];
   iy=g_iup[ix][0]; 
   icy=g_lexic2eosub[iy];
@@ -2258,13 +2277,29 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
   up=&g_gauge_field[ix][0];
 #    endif
+
+#endif
    
   /**************** loop over all lattice sites ******************/
+#ifdef OMP
+#pragma omp for
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
     ix=g_eo2lexic[icx];
     /*********************** direction +0 ************************/
 
     iy=g_idn[ix][0]; icy=g_lexic2eosub[iy];
+
+#ifdef OMP
+#  if ((defined _GAUGE_COPY))
+    up=&g_gauge_field_copy[icx][0];
+#  else
+    up=&g_gauge_field[ix][0];
+#  endif
+    iyup=g_iup[ix][0]; icyup=g_lexic2eosub[iyup];
+    sp=k+icyup;
+    _prefetch_spinor(sp);
+#endif
 
     sm=k+icy;
     _prefetch_spinor(sm);
@@ -2274,6 +2309,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #    else
     um=&g_gauge_field[iy][0]; 
 #    endif
+
     _prefetch_su3(um);
       
     _sse_load(sp->s0);
@@ -2623,6 +2659,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     _sse_vector_sub();
     _sse_store_nt(rn->s3);
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 #    endif /* _USE_TSPLITPAR */
 
@@ -2676,6 +2715,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   else{
     ioff = (VOLUME+RAND)/2;
   }
+  
   ioff2 = (VOLUME+RAND)/2-ioff;
 
   ix=g_eo2lexic[ioff];
