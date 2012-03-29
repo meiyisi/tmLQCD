@@ -151,6 +151,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   else {
     U = g_gauge_field_copy[1][0];
   }
+  _prefetch_su3(U);
 #else
   if(ieo == 0) {
     U0 = g_gauge_field_copy[0][0];
@@ -169,11 +170,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #endif
   for(i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
-    ix = i*8;
     s = k+i;
-    U = U0+i*4;
-
     _prefetch_spinor(s);
+    U = U0+i*4;
+    _prefetch_su3(U);
+    ix = i*8;
 #endif
     /*********************** direction +0 ************************/
     _prefetch_su3(U+predist);
@@ -338,6 +339,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   else {
     U = g_gauge_field_copy[0][0];
   }
+  _prefetch_su3(U);
 #else
   if(ieo == 0) {
     U0 = g_gauge_field_copy[1][0];
@@ -357,8 +359,9 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #endif
   for(i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
-    ix = i*8;
     U = U0 + i*4;
+    _prefetch_su3(U);
+    ix = i*8;
     s = l + i;
 #endif
     /*********************** direction +0 ************************/
@@ -651,6 +654,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     else {
       U = g_gauge_field_copy[1][0];
     }
+    _prefetch_su3(U);
 #else
     if(ieo == 0) {
       U0 = g_gauge_field_copy[0][0];
@@ -665,13 +669,15 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #ifdef OMP
 #pragma omp for
 #else
-ix = 0;
+  ix = 0;
 #endif
     for(i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
       s=k+i;
-      ix=i*8;
+      _prefetch_spinor(s);
       U=U0+i*4;
+      _prefetch_su3(U);
+      ix=i*8;
 #endif
       _bgl_load_rs0(s->s0);
       _bgl_load_rs1(s->s1);
@@ -793,6 +799,7 @@ ix = 0;
     else {
       U = g_gauge_field_copy[0][0];
     }
+    _prefetch_su3(U);
 #else
     if(ieo == 0) {
       U0 = g_gauge_field_copy[1][0];
@@ -802,13 +809,12 @@ ix = 0;
     }
 #endif
 
-    /* I don't fully understand why we prefetch here as this is replaced with a different
-     * address just below */
-    //_prefetch_halfspinor(phi32[0]);
-    //_prefetch_su3(U);
-
     phi32 = NBPointer32[2 + ieo];
-    
+#ifndef OMP
+    _prefetch_halfspinor(phi32[0]);
+#endif    
+
+
       /* Now we sum up and expand to a full spinor */
 #ifdef OMP
 #pragma omp for
@@ -820,8 +826,10 @@ ix = 0;
     for(i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
       ix=i*8;
-      s=l+i;
+      _prefetch_halfspinor(phi32[ix]);
       U=U0+i*4;
+      _prefetch_su3(U);
+      s=l+i;
 #endif
 
       /* This causes a lot of trouble, do we understand this? */
@@ -976,10 +984,11 @@ ix = 0;
     for(i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
       s=l+i;
+      _prefetch_spinor(s);
       U=U0+i*4;
+      _prefetch_su3(U);
       ix=i*8;
 
-      _prefetch_spinor(s);
 #endif
       _prefetch_halfspinor(phi[ix+4]);
       _bgl_load_rs0(s->s0);
@@ -1112,10 +1121,7 @@ ix = 0;
     else {
       U = g_gauge_field_copy[0][0];
     }
-    /* again not sure about this prefetch */:
-    //_prefetch_su3(U);
-    /* the next instruction, if uncommented, needs to go below the redefinition of phi below! */
-    //_prefetch_halfspinor(phi[0]);
+    _prefetch_su3(U);
 #else
     if(ieo == 0) {
       U0 = g_gauge_field_copy[1][0];
@@ -1126,6 +1132,9 @@ ix = 0;
 #endif
 
     phi = NBPointer[2 + ieo];
+#ifndef OMP
+    _prefetch_halfspinor(phi[0]);
+#endif
 
     /* Now we sum up and expand to a full spinor */
 #ifdef OMP
@@ -1136,9 +1145,11 @@ ix = 0;
     /*   _prefetch_spinor_for_store(s); */
     for(i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
+      ix=i*8;
+      _prefetch_halfspinor(phi[ix]);
       s=l+i;
       U=U0+i*4;
-      ix=i*8;
+      _prefetch_su3(U);
 #endif
 
       /* This causes a lot of trouble, do we understand this? */
