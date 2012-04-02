@@ -2768,7 +2768,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 #ifdef OMP
     iyup=g_iup[ix][0]; 
-    icyup=g_lexi2eosub[iyup];
+    icyup=g_lexic2eosub[iyup];
     sp=k+icyup;
 #  if ((defined _GAUGE_COPY))
     up=&g_gauge_field_copy[icx][0];
