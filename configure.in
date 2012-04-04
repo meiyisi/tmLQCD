@@ -477,6 +477,10 @@ XLCGREP=`$CC -V 2>&1 | grep -i xlc`
 if test "$XLCGREP" != ""; then
   XLC="yes"
   AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
+dnl if AC_OPENMP did not run (old autoconf f.ex.) , this is required  
+  if "$enable_omp" == "yes"; then
+    CFLAGS="$CFLAGS -qsmp=omp"
+  fi
 fi
 PGCC=`$CC -V 2>&1 | grep pgcc`
 ICC=`$CC -V 2>&1 | grep -i intel`
@@ -635,6 +639,12 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
     OPTARGS="$OPTARGS -qarch=450d -qtune=450"
     SOPTARGS="$SOPTARGS -qarch=450d -qtune=450"
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
+  dnl when compiling with OpenMP support the qstrict option is required!
+  dnl otherwise the compiler stalls in the final linking step during IPA 
+    if test "$enable_omp" == "yes"; then
+      OPTARGS="$OPTARGS -qstrict"
+      SOPTARGS="$SOPTARGS -qstrict"
+    fi
 # OPTARGS="-qhot" leads to wrong code
   fi
 #  LIBS="-lxlf90_r -lxlomp_ser -lxl -lxlopt -lxlfmath -ldl -lrt -lpthread  $LIBS"
