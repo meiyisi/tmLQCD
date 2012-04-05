@@ -3104,7 +3104,7 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 
 #ifdef OMP
     iyup=g_iup[ix][0]; 
-    icyup=g_lexi2eosub[iyup];
+    icyup=g_lexic2eosub[iyup];
     sp=k+icyup;
     /* I'm not sure whether this should be prefetched here! */
     //_prefetch_spinor((void*)sp);
