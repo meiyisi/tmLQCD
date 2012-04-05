@@ -961,6 +961,7 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
     else {
       U = g_gauge_field_copy[1][0];
     }
+    _prefetch_su3(U);
 #else
     if(ieo == 0) {
       U0 = g_gauge_field_copy[0][0];
@@ -972,9 +973,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
     phi = NBPointer[ieo];
 
-    /* Again, not sure what the use of this prefetch is */
-    //_prefetch_su3(U);
-
     /**************** loop over all lattice sites ******************/
 #ifdef OMP
 #pragma omp for
@@ -983,12 +981,11 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #endif
     for(i = 0; i < (VOLUME)/2; i++){
 #ifdef OMP
-      s=l+i;
+      s=k+i;
       _prefetch_spinor(s);
       U=U0+i*4;
       _prefetch_su3(U);
       ix=i*8;
-
 #endif
       _prefetch_halfspinor(phi[ix+4]);
       _bgl_load_rs0(s->s0);
