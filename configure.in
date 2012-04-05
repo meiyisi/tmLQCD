@@ -270,7 +270,7 @@ AC_CHECK_FUNCS(clock_gettime, [], [
 
 dnl with glibc and c99 mode the timespec required for clock_gettime is only
 dnl available in POSIX 199309L compatibility mode when clock_gettime is in librt
-if test "$ac_cv_lib_rt_clock_gettime" == "yes"; then
+if test "$ac_cv_lib_rt_clock_gettime" = "yes"; then
   CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
   AC_MSG_NOTICE([Instructing the compiler to use POSIX 199309L])
 fi
@@ -478,7 +478,7 @@ if test "$XLCGREP" != ""; then
   XLC="yes"
   AC_DEFINE(XLC,1,Are we using the IBM xlc compiler?)
 dnl if AC_OPENMP did not run (old autoconf f.ex.) , this is required  
-  if "$enable_omp" == "yes"; then
+  if "$enable_omp" = "yes"; then
     CFLAGS="$CFLAGS -qsmp=omp"
   fi
 fi
@@ -641,7 +641,7 @@ elif test "$host_cpu" = "powerpc" && test "$host_vendor" = "ibm" && test "$host_
     DEBUGFLAG="$DEBUGFLAG -qfullpath"
   dnl when compiling with OpenMP support the qstrict option is required!
   dnl otherwise the compiler stalls in the final linking step during IPA 
-    if test "$enable_omp" == "yes"; then
+    if test "$enable_omp" = "yes"; then
       OPTARGS="$OPTARGS -qstrict"
       SOPTARGS="$SOPTARGS -qstrict"
     fi
