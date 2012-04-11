@@ -481,6 +481,7 @@ if test "$XLCGREP" != ""; then
 dnl if AC_OPENMP did not run (old autoconf f.ex.) , this is required  
   if test "$enable_omp" = "yes"; then
     CFLAGS="$CFLAGS -qsmp=omp"
+    LDFLAGS="$LDFLAGS -qsmp=omp"
   fi
 fi
 PGCC=`$CC -V 2>&1 | grep pgcc`
