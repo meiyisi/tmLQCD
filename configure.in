@@ -494,6 +494,12 @@ dnl the GNU compiler
     CFLAGS="$CFLAGS -pedantic -Wall"
     OPTARGS='-O'
     SOPTARGS='-O'
+    
+    dnl in case AC_OPENMP didn't run (old autoconf), set openmp compiler flags!
+    if test "$enable_omp" = "yes"; then
+      CFLAGS="$CFLAGS -fopenmp"
+      LDFLAGS="$LDFLAGS -fopenmp"
+    fi
 
     if test $enable_sse3 = yes; then
       echo Using SSE3 and SSE2 macros!
@@ -539,6 +545,12 @@ dnl check for icc
       DEBUG_FLAG="-g"
       PROFILE_FLAG="-p -g"
       CCDEP="$CC"
+      
+      dnl in case AC_OPENMP didn't run (old autoconf), set openmp compiler flags!
+      if test "$enable_omp" = "yes"; then
+        CFLAGS="$CFLAGS -openmp"
+        LDFLAGS="$LDFLAGS -openmp"
+      fi
 
     else
       DEPFLAGS="-M"
