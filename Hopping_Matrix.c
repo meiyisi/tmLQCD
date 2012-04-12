@@ -2223,6 +2223,17 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 /* 5. */
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+  /* exchange before paralellelisation to remove one barrier */
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
+#    if (defined MPI && !defined _NO_COMM)
+  xchange_field(k, ieo);
+#    endif
+
 #ifdef OMP
 #pragma omp parallel
   {
@@ -2239,27 +2250,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
   spinor * restrict sm;
   spinor * restrict rn;
   
-  /* for parallelization */
-
-#ifdef OMP
-#pragma omp single
-{
-#endif
-
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-
-#    if (defined MPI && !defined _NO_COMM)
-  xchange_field(k, ieo);
-#    endif
-
-#ifdef OMP
-} /* omp single closing brace */
-#endif
-
   if(k == l){
     printf("Error in subroutine D_psi: improper arguments\n");
     printf("Program aborted\n");
@@ -2685,6 +2675,17 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 /* 6. */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
+#    if (defined MPI && !(defined _NO_COMM))
+  xchange_field(k, ieo);
+#    endif
+
 #ifdef OMP
 #pragma omp parallel
   {
@@ -2711,25 +2712,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
   __alignx(16,l);
   __alignx(16,k);
-
-#ifdef OMP
-#pragma omp single
-{
-#endif
-
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-
-#    if (defined MPI && !(defined _NO_COMM))
-  xchange_field(k, ieo);
-#    endif
-
-#ifdef OMP
-} /* omp single closing brace */
-#endif
 
   if(ieo == 0){
     ioff = 0;
@@ -3034,6 +3016,17 @@ static su3_vector psi1, psi2, psi, chi, phi1, phi3;
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
+
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
+#    if (defined MPI && !(defined _NO_COMM))
+  xchange_field(k, ieo);
+#    endif
+
 #ifdef OMP
 #pragma omp parallel
   {
@@ -3046,26 +3039,6 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
   spinor * restrict r,* restrict sp,* restrict sm;
   spinor temp;
 #pragma disjoint(temp, *sp, *sm, *r, *up, *um)
-
-#ifdef OMP
-#pragma omp single
-{
-#endif
-
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-
-  /* for parallelization */
-#    if (defined MPI && !(defined _NO_COMM))
-  xchange_field(k, ieo);
-#    endif
-
-#ifdef OMP
-}
-#endif
 
   if(k == l){
     printf("Error in H_psi (simple.c):\n");
@@ -3376,21 +3349,6 @@ static su3_vector psi1, psi2, psi, chi, phi1, phi3;
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
-#ifdef OMP
-#pragma omp parallel
-  {
-  su3_vector psi1, psi2, psi, chi, phi1, phi3;
-#endif
-  int ix,iy;
-  int ioff,ioff2,icx,icy;
-  su3 * restrict up, * restrict um;
-  spinor * restrict r, * restrict sp, * restrict sm;
-  spinor temp;
-
-#ifdef OMP
-#pragma omp single
-{
-#endif
 
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
@@ -3404,8 +3362,15 @@ void Hopping_Matrix(int ieo, spinor * const l, spinor * const k){
 #    endif
 
 #ifdef OMP
-} /* omp single closing brace */
+#pragma omp parallel
+  {
+  su3_vector psi1, psi2, psi, chi, phi1, phi3;
 #endif
+  int ix,iy;
+  int ioff,ioff2,icx,icy;
+  su3 * restrict up, * restrict um;
+  spinor * restrict r, * restrict sp, * restrict sm;
+  spinor temp;
 
   if(k == l){
     printf("Error in H_psi (simple.c):\n");
