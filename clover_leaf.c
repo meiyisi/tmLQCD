@@ -403,12 +403,25 @@ inline void add_tm(_Complex double a[6][6], const double mu) {
 }
 
 double sw_trace(const int ieo, const double mu) {
+#ifdef OMP
+#define static
+#endif
+  /* ks and kc are used in a reduction and are thus shared variables for OpenMP 
+   * outside of the for loop below */
+  static double ks,kc;
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
   int i,x,icx,ioff;
   static su3 v;
   static _Complex double a[6][6];
   static double tra;
-  static double ks,kc,tr,ts,tt;
+  static double tr,ts,tt;
   static _Complex double det;
+#ifdef OMP
+#undef static
+#endif
 
   ks=0.0;
   kc=0.0;
@@ -419,6 +432,9 @@ double sw_trace(const int ieo, const double mu) {
   else {
     ioff=(VOLUME+RAND)/2;
   }
+  /* inside this loop ks and kc are private variables, at the end of it
+   * their values from the different threads are added up */
+#pragma omp for reduction(+:ks) reduction(+:kc)
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
@@ -443,6 +459,12 @@ double sw_trace(const int ieo, const double mu) {
       kc=tr-tt;
     }
   }
+/* leave the parallel section before the MPI reduction of kc/ks
+ * due to the OMP reduction above, kc and ks will be the sums as required */  
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+  
   kc=ks+kc;
 #ifdef MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
