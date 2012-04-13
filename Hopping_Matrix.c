@@ -105,6 +105,12 @@
 /* 1. */
 /* input on k; output on l */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
 #ifdef OMP
 #pragma omp parallel
 {
@@ -124,19 +130,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #endif
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(hoppingmatrix)
-#endif
-
-#ifdef OMP
-#pragma omp single
-{
-#endif
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-#ifdef OMP
-}
 #endif
 
 #ifndef OMP
@@ -588,6 +581,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 
 /* 2. */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
 #ifdef OMP
 #pragma omp parallel
   {
@@ -611,21 +610,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #pragma pomp inst begin(hoppingmatrix)
 #endif
 #pragma disjoint(*s, *U)
-
-#ifdef OMP
-#pragma omp single
-{
-#endif
-
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-
-#ifdef OMP
-}
-#endif
 
   __alignx(16, l);
   __alignx(16, k);
@@ -1285,6 +1269,12 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 /* l output , k input*/
 /* for ieo=0, k resides on  odd sites and l on even sites */
 void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(g_gauge_field);
+  }
+#endif
+
 #ifdef OMP
 #pragma omp parallel
   {
@@ -1304,22 +1294,6 @@ void Hopping_Matrix(const int ieo, spinor * const l, spinor * const k){
 #endif
 #ifdef XLC
 #pragma disjoint(*l, *k, *U, *s)
-#endif
-
-
-#ifdef OMP
-#pragma omp single
-{
-#endif
-
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(g_gauge_field);
-  }
-#endif
-
-#ifdef OMP
-}
 #endif
 
   if(k == l){
