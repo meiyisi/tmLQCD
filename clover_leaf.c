@@ -490,10 +490,22 @@ void mult_6x6(_Complex double a[6][6], _Complex double b[6][6], _Complex double 
 }
 
 void sw_invert(const int ieo, const double mu) {
+#ifdef OMP
+#define static
+#endif
+
+#ifdef OMP
+#pragma omp parallel
+  {
+  int icy;
+#endif
   int ioff, err=0;
   int i, x;
   static su3 v;
   static _Complex double a[6][6];
+#ifdef OMP
+#undef static
+#endif
   if(ieo==0) {
     ioff=0;
   } 
@@ -501,7 +513,13 @@ void sw_invert(const int ieo, const double mu) {
     ioff=(VOLUME+RAND)/2;
   }
 
+#ifdef OMP
+#pragma omp for
+  for(int icx = ioff; icx < (VOLUME/2+ioff); icx++) {
+    icy = icx - ioff;
+#else
   for(int icx = ioff, icy = 0; icx < (VOLUME/2+ioff); icx++, icy++) {
+#endif
     x = g_eo2lexic[icx];
 
     for(i = 0; i < 2; i++) {
@@ -556,6 +574,9 @@ void sw_invert(const int ieo, const double mu) {
       }
     }
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   return;
 }
 
