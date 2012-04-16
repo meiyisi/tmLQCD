@@ -57,6 +57,16 @@
 #if (defined BGL && defined XLC)
 
 void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
+  /* for parallelization */
+#ifdef MPI
+  xchange_2fields(k, l, ieo);
+#endif
+
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
 
   int ix,iy, iz;
   int ioff, icx, icy, icz;
@@ -70,6 +80,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
   spinor * restrict r ALIGN;
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
+
+#ifdef OMP
+#undef static
+#endif
 
   /* We have 32 registers available */
   double _Complex reg00, reg01, reg02, reg03, reg04, reg05;
@@ -96,20 +110,26 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     ioff=(VOLUME+RAND)/2;
   } 
 
-  /* for parallelization */
-#ifdef MPI
-  xchange_2fields(k, l, ieo);
-#endif
   /************** loop over all lattice sites ****************/
 
+#ifndef OMP
   ix=g_eo2lexic[ioff];
   iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
   sp = k + icy;
   _prefetch_spinor(sp);
   up=&hf->gaugefield[ix][0];
   _prefetch_su3(up);
+#endif
 
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++){
+#ifdef OMP
+    ix=g_eo2lexic[icx];
+    iy=g_iup[ix][0]; icy=g_lexic2eosub[iy];
+    sp = k + icy;
+    _prefetch_spinor(sp);
+    up=&hf->gaugefield[ix][0];
+    _prefetch_su3(up);
+#endif
 /*     rr = (*(l + (icx-ioff))); */
     /*     rr=g_spinor_field[l][icx-ioff]; */
 /*     r=&rr; */
@@ -117,8 +137,6 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     /* load left vector r and */
     /* multiply with gamma5   */
     r = l + (icx-ioff);
-    ix=g_eo2lexic[icx];
-
     /*********************** direction +0 ********************/
 
     ddd = &hf->derivative[ix][0];
@@ -394,6 +412,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 #ifdef _KOJAK_INST
 #pragma pomp inst end(derivSb)
 #endif
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 
 #else
@@ -455,16 +477,6 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
   else {
     ioff=(VOLUME+RAND)/2;
   } 
-
-#ifdef _GAUGE_COPY
-  if(g_update_gauge_copy) {
-    update_backward_gauge(hf->gaugefield);
-  }
-#endif
-  /* for parallelization */
-#ifdef MPI
-  xchange_2fields(k, l, ieo);
-#endif
 
   /************** loop over all lattice sites ****************/
 #ifdef OMP
