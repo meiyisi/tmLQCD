@@ -401,18 +401,28 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 
 
 void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_field_t * const hf) {
+
 #ifdef OMP
+#ifdef _GAUGE_COPY
+  if(g_update_gauge_copy) {
+    update_backward_gauge(hf->gaugefield);
+  }
+#endif
+  /* for parallelization */
+#ifdef MPI
+  xchange_2fields(k, l, ieo);
+#endif
+#endif /* OMP */
+
+#ifdef OMP
+#define static
 #pragma omp parallel
   {
-  su3 v1,v2;
-  su3_vector psia,psib,phia,phib;
-  spinor rr;
-#else
+#endif
+
   static su3 v1,v2;
   static su3_vector psia,psib,phia,phib;
   static spinor rr;
-#endif
-
   int ix,iy;
   int ioff, icx, icy;
   su3 * restrict up ALIGN;
@@ -422,6 +432,10 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
 /*   spinor * restrict r ALIGN; */
   spinor * restrict sp ALIGN;
   spinor * restrict sm ALIGN;
+
+#ifdef OMP
+#undef static
+#endif
 
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(derivSb)
@@ -442,11 +456,6 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
     ioff=(VOLUME+RAND)/2;
   } 
 
-#ifdef OMP
-#pragma omp single
-{
-#endif
-
 #ifdef _GAUGE_COPY
   if(g_update_gauge_copy) {
     update_backward_gauge(hf->gaugefield);
@@ -455,10 +464,6 @@ void deriv_Sb(const int ieo, spinor * const l, spinor * const k, hamiltonian_fie
   /* for parallelization */
 #ifdef MPI
   xchange_2fields(k, l, ieo);
-#endif
-
-#ifdef OMP
-}
 #endif
 
   /************** loop over all lattice sites ****************/
