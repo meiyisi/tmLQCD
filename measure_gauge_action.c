@@ -41,17 +41,42 @@
 #include "measure_gauge_action.h"
 
 double measure_gauge_action(su3 ** const gf) {
-  int ix,ix1,ix2,mu1,mu2;
-  static su3 pr1,pr2; 
-  su3 *v,*w;
-  static double ga,ac;
+
+/* there is a reduction on ks and kc so for OpenMP these need to be
+ * shared variables outside the parallel region
+ * we can keep the static keyword and even need it for ga because
+ * of the way kc and ks are accessed and the way ga is returned
+ * at every call of this function */
+
+  static double ga,ks,kc;
+  ks=0.0; kc=0.0;
+
 #ifdef MPI
   static double gas;
 #endif
-  static double ks,kc,tr,ts,tt;
+ 
+
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
+
+  int ix,ix1,ix2,mu1,mu2;
+  static su3 pr1,pr2; 
+  su3 *v,*w;
+  static double ac,tr,ts,tt;
+
+#ifdef OMP
+#undef static
+#endif
 
   if(g_update_gauge_energy) {
     kc=0.0; ks=0.0;
+
+#ifdef OMP
+#pragma omp for reduction(+:ks) reduction(+:kc)
+#endif
     for (ix=0;ix<VOLUME;ix++){
       for (mu1=0;mu1<3;mu1++){ 
 	ix1=g_iup[ix][mu1];
@@ -72,6 +97,16 @@ double measure_gauge_action(su3 ** const gf) {
 	}
       }
     }
+
+#ifdef OMP
+  } /* we need to close and reopen the g_update_gauge_energy block 
+     * to be able to close the OpenMP parallel section before 
+     * doing the final summation */
+  } /* OpenMP closing brace */
+
+  if(g_update_gauge_energy) {
+#endif
+
     ga=(kc+ks)/3.0;
 #ifdef MPI
     MPI_Allreduce(&ga, &gas, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
