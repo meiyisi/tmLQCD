@@ -459,7 +459,9 @@ double sw_trace(const int ieo, const double mu) {
   }
   /* inside this loop ks and kc are private variables, at the end of it
    * their values from the different threads are added up */
+#ifdef OMP
 #pragma omp for reduction(+:ks) reduction(+:kc)
+#endif
   for(icx = ioff; icx < (VOLUME/2+ioff); icx++) {
     x = g_eo2lexic[icx];
     for(i=0;i<2;i++) {
