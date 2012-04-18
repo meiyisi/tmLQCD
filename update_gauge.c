@@ -47,16 +47,29 @@
 
 
 void update_gauge(const double step, hamiltonian_field_t * const hf) {
+#ifdef OMP
+#define static
+#pragma omp parallel
+  {
+#endif
 
   int i,mu;
   static su3 v,w;
   su3 *z;
   static su3adj deriv;
   su3adj *xm;
+
+#ifdef OMP
+#undef static
+#endif
+
 #ifdef _KOJAK_INST
 #pragma pomp inst begin(updategauge)
 #endif
 
+#ifdef OMP
+#pragma omp for
+#endif
   for(i = 0; i < VOLUME; i++) { 
     for(mu = 0; mu < 4; mu++){
       /* moment[i][mu] = h_{i,mu}^{alpha} */
@@ -69,6 +82,10 @@ void update_gauge(const double step, hamiltonian_field_t * const hf) {
     }
   }
   
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 #ifdef MPI
   /* for parallelization */
   xchange_gauge(hf->gaugefield);
