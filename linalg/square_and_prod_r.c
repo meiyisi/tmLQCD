@@ -35,27 +35,44 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "square_and_prod_r.h"
 
 void square_and_prod_r(double * const x1, double * const x2, spinor * const S, spinor * const R, const int N)
 {
-  int ix;
-  static double ks,kc,ds,tr,ts,tt;
-  static double xks,xkc,xds,xtr,xts,xtt;
-  spinor *s,*r;
-  
-  ks=0.0;
-  kc=0.0;
-  
-  xks=0.0;
-  xkc=0.0;
+#ifdef OMP
+#define static
+#endif
 
+  static double ks,kc,xks,xkc;
+  ks = kc = xkc = xks = 0.0;
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  int ix;
+  static double ds,tr,ts,tt;
+  static double xds,xtr,xts,xtt;
+  spinor *s,*r;
+
+#ifdef OMP
+#undef static
+#endif
+  
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
 #endif
-  
+
+
+#ifdef OMP
+#pragma omp for reduction(+:kc) reduction(+:ks) reduction(+:xkc) reduction(+:xks)
+#endif
   for (ix = 0; ix < N; ix++)
   {
     s=(spinor *) S + ix;
@@ -83,21 +100,23 @@ void square_and_prod_r(double * const x1, double * const x2, spinor * const S, s
     xks=xts;
     xkc=xtr-xtt;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   xkc=xks + xkc;
   *x1=xkc;
 
 #if defined MPI
-
   MPI_Allreduce(&xkc, x1, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
 #endif
+
   kc=ks + kc;
   *x2=kc;
 
 #if defined MPI
-
     MPI_Allreduce(&kc, x2, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-
 #endif
 }
 
