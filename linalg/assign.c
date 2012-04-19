@@ -28,6 +28,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <complex.h>
@@ -38,8 +41,16 @@
 /* S input, R output */
 void assign(spinor * const R, spinor * const S, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   spinor *r,*s;
   
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix)
   {
     r= R + ix;
@@ -62,14 +73,25 @@ void assign(spinor * const R, spinor * const S, const int N)
     r->s3.c2 = s->s3.c2;
   }
   
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
   /* NOTE  memmove(R, S, N * sizeof(spinor)); */
 }
 
 #ifdef WITHLAPH
 void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N)
 {
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   su3_vector *r,*s;
 
+#ifdef OMP
+#pragma omp for
+#endif
   for (int ix = 0; ix < N; ++ix) 
   {
     r=R+ix;      
@@ -79,5 +101,8 @@ void assign_su3vect(su3_vector * const R, su3_vector * const S, const int N)
     r->c1 = s->c1;
     r->c2 = s->c2;
   }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
 }
 #endif
