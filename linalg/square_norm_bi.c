@@ -37,19 +37,34 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "sse.h"
 #include "square_norm_bi.h"
 
 double square_norm_bi(bispinor  *  const P, const int N) {
+#ifdef OMP
+#define static
+#endif
+
+  static double ks,kc;
+  ks = kc = 0.0;
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  static double ds,tr,ts,tt;
   spinor  * s,  * t;
   
-  ks = 0.0;
-  kc = 0.0;
-  
   /*  Change due to even-odd preconditioning : VOLUME   to VOLUME/2  */   
+#ifdef OMP
+#pragma omp for reduction(+:kc) reduction(+:ks)
+#endif
   for (ix  =  0; ix < N; ix++)
   {
     s = &P[ix].sp_up;
@@ -87,6 +102,11 @@ double square_norm_bi(bispinor  *  const P, const int N) {
     ks = ts;
     kc = tr-tt;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   kc = ks + kc;
 #ifdef MPI
   MPI_Allreduce(&kc, &ks, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
