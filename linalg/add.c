@@ -25,6 +25,9 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
@@ -34,9 +37,17 @@
 
 /* Q output, R input, S input */
 void add(spinor * const Q,spinor * const R,spinor * const S, const int N){
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   int ix;
   spinor *q,*r,*s;
   
+#ifdef OMP
+#pragma omp for
+#endif
   for (ix = 0; ix < N; ix++){
     q=(spinor *) Q + ix;
     r=(spinor *) R + ix;
@@ -58,5 +69,10 @@ void add(spinor * const Q,spinor * const R,spinor * const S, const int N){
     q->s3.c1 = r->s3.c1 + s->s3.c1;
     q->s3.c2 = r->s3.c2 + s->s3.c2;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
 }
 
