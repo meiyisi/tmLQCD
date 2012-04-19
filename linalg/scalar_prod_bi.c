@@ -33,6 +33,9 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "scalar_prod_bi.h"
 
@@ -40,13 +43,20 @@
 /*  <S,R>=S^* times R */
 _Complex double scalar_prod_bi(bispinor * const S, bispinor * const R, const int N){
 
-  _Complex double ks,kc,ds,tr,ts,tt;
+  _Complex double ks,kc,c;  
+  kc = ks = c = 0.0; 
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  _Complex double ds,tr,ts,tt;
   spinor *s,*r, *t, *u;
-  _Complex double c = 0.0;
-  
-  ks=0.0;
-  kc=0.0;
-  
+
+#ifdef OMP
+#pragma omp for reduction(+:kc) reduction(+:ks)
+#endif  
   for (int ix = 0; ix < N; ++ix)
   {
 
@@ -72,6 +82,11 @@ _Complex double scalar_prod_bi(bispinor * const S, bispinor * const R, const int
     ks = ts;
     kc = tr-tt;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   kc = ks + kc;
 
 #if defined MPI
