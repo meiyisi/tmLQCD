@@ -63,6 +63,7 @@ double square_norm_bi(bispinor  *  const P, const int N) {
   
   /*  Change due to even-odd preconditioning : VOLUME   to VOLUME/2  */   
 #ifdef OMP
+#undef static
 #pragma omp for reduction(+:kc) reduction(+:ks)
 #endif
   for (ix  =  0; ix < N; ix++)
