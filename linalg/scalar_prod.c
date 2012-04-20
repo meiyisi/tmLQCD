@@ -24,25 +24,44 @@
 #ifdef MPI
 #include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "scalar_prod.h"
 
 /*  <S,R>=S^* times R */
 _Complex double scalar_prod(spinor * const S, spinor * const R, const int N, const int parallel){
-  int ix;
-  static _Complex double ds,ks,kc,tr,ts,tt;
-  spinor *s,*r;
+#ifdef OMP
+#define static
+#endif
+
+  static _Complex double ks,kc;
+  ks = kc = 0.0;
   _Complex double c;
+
 #ifdef MPI
   _Complex double d;
 #endif
   
-  ks=0.0;
-  kc=0.0;
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  int ix;
+  static _Complex double ds,tr,ts,tt;
+  spinor *s,*r;
+  
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
-#endif  
+#endif
+#ifdef OMP
+#undef static
+#pragma omp for reduction(+:kc) reduction(+:ks)
+#endif
   for (ix = 0; ix < N; ix++)
   {
     s=(spinor *) S + ix;
@@ -60,6 +79,11 @@ _Complex double scalar_prod(spinor * const S, spinor * const R, const int N, con
     ks=ts;
     kc=tr-tt;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   kc=ks+kc;
 
   c = kc;
@@ -77,17 +101,33 @@ _Complex double scalar_prod(spinor * const S, spinor * const R, const int N, con
 #ifdef WITHLAPH
 _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, const int N, const int parallel)
 {
-  static double ks, ds, tr, ts, tt;
-  su3_vector *s, *r;
+#ifdef OMP
+#define static
+#endif
+
+  static double ks;
   _Complex double c;
+
+  ks = c = 0.0;
+
 #ifdef MPI
   _Complex double d;
 #endif
 
-  /* Real Part */
 
-  ks = 0.0;
-  c  = 0.0;
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  static double ds, tr, ts, tt;
+  su3_vector *s, *r;
+
+  /* Real Part */
+#ifdef OMP
+#undef static
+#pragma omp for reduction(+:c) reduction(+:ks)
+#endif
   for (int ix = 0; ix < N; ++ix)
     {
       s = (su3_vector *) S + ix;
@@ -102,6 +142,10 @@ _Complex double scalar_prod_su3vect(su3_vector * const S, su3_vector * const R, 
       ks = ts;
       c  = tr - tt;
     }
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   c = ks + c;
 
 #ifdef MPI
