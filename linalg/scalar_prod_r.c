@@ -31,6 +31,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "scalar_prod_r.h"
 
@@ -40,18 +43,30 @@
 
 double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int parallel)
 {
-  
-  static double ks,kc,ds,tr,ts,tt;
+#ifdef OMP
+#define static
+#endif
+
+  static double ks,kc;
+  ks = kc = 0.0;
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
+  static double ds,tr,ts,tt;
   spinor *s,*r;
-  
-  ks=0.0;
-  kc=0.0;
   
 #if (defined BGL && defined XLC)
   __alignx(16, S);
   __alignx(16, R);
 #endif
 
+#ifdef OMP
+#undef static
+#pragma omp for reduction(+:kc) reduction(+:ks)
+#endif
   for (int ix = 0; ix < N; ++ix)
   {
     s=(spinor *) S + ix;
@@ -68,6 +83,11 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
     ks=ts;
     kc=tr-tt;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   kc=ks+kc;
 
 #if defined MPI
@@ -85,12 +105,26 @@ double scalar_prod_r(spinor * const S, spinor * const R, const int N, const int 
 #ifdef WITHLAPH
 double scalar_prod_r_su3vect(su3_vector * const S,su3_vector * const R, const int N, const int parallel)
 {
+#ifdef OMP
+#define static
+#endif
+
+  static double ks,kc;
+  ks = kc = 0.0;
+
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  static double ds,tr,ts,tt;
   su3_vector *s,*r;
 
-  ks=0.0;
-  kc=0.0;
+#ifdef OMP
+#undef static
+#pragma omp for reduction(+:ks) reduction(+:kc)
+#endif
   for (int ix = 0; ix < N; ++ix)
   {
     s = (su3_vector *) S + ix;
@@ -106,6 +140,11 @@ double scalar_prod_r_su3vect(su3_vector * const S,su3_vector * const R, const in
     ks = ts;
     kc = tr-tt;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   kc = ks + kc;
 #if defined MPI
   if(parallel)
