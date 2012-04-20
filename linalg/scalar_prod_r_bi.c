@@ -38,21 +38,35 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include "su3.h"
 #include "scalar_prod_r_bi.h"
 
 
 /*  R input, S input */
 double scalar_prod_r_bi(bispinor * const S,bispinor * const R, const int N){
+#ifdef OMP
+#define static
+#endif
 
-
+  static double ks,kc;
+  ks = kc = 0.0;
+ 
+#ifdef OMP
+#pragma omp parallel
+  {
+#endif
+  
   int ix;
-  static double ks,kc,ds,tr,ts,tt;
+  static double ds,tr,ts,tt;
   spinor *s,*r,*t,*u;
   
-  ks=0.0;
-  kc=0.0;
-  
+#ifdef OMP
+#undef static
+#pragma omp for reduction(+:kc) reduction(+:ks)
+#endif
   for (ix=0;ix<N;ix++){
 
     s = (spinor *) &S[ix].sp_up;
@@ -75,6 +89,11 @@ double scalar_prod_r_bi(bispinor * const S,bispinor * const R, const int N){
     ks = ts;
     kc = tr-tt;
   }
+
+#ifdef OMP
+  } /* OpenMP closing brace */
+#endif
+
   kc = ks + kc;
 
 #if defined MPI
