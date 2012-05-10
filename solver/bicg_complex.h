@@ -17,42 +17,13 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifdef HAVE_CONFIG_H
-# include<config.h>
+#ifndef _BICG_COMPLEX_H
+#define _BICG_COMPLEX_H
+
+#include"solver/matrix_mult_typedef.h"
+#include"su3.h"
+
+int bicg_complex(spinor * const, spinor * const, const int max_iter, double eps_sq, 
+		     const int rel_prec, const int N, matrix_mult f, matrix_mult fdagg);
+
 #endif
-#include <stdlib.h>
-#include <stdio.h>
-#include <math.h>
-#include "su3.h"
-#include "assign_add_mul.h"
-
-
-/*	(*R) = (*R) + c*(*S)        c is a complex constant	*/
-void assign_add_mul(spinor * const R, spinor * const S, const _Complex double c, const int N)
-{
-  spinor *r,*s;
-
-  for (int ix=0; ix<N; ix++)
-  {
-    r=(spinor *) R + ix;
-    s=(spinor *) S + ix;
-
-    r->s0.c0 += c * s->s0.c0;
-    r->s0.c1 += c * s->s0.c1;
-    r->s0.c2 += c * s->s0.c2;
-
-    r->s1.c0 += c * s->s1.c0;
-    r->s1.c1 += c * s->s1.c1;
-    r->s1.c2 += c * s->s1.c2;
-
-    r->s2.c0 += c * s->s2.c0;
-    r->s2.c1 += c * s->s2.c1;
-    r->s2.c2 += c * s->s2.c2;
-
-    r->s3.c0 += c * s->s3.c0;
-    r->s3.c1 += c * s->s3.c1;
-    r->s3.c2 += c * s->s3.c2;
-  }
-}
-
-

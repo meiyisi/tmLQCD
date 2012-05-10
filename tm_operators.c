@@ -348,8 +348,15 @@ void Qtm_pm_psi_nocom(spinor * const l, spinor * const k){
 
 
 
-
-
+/* the "full" operators */
+void D_dagg_psi(spinor * const l, spinor * const k)
+{
+  gamma5(l, k, VOLUME);	
+  g_mu = -g_mu;
+  D_psi(g_spinor_field[DUM_MATRIX], l);
+  gamma5(l, g_spinor_field[DUM_MATRIX], VOLUME);
+  g_mu = -g_mu;
+}
 
 /* the "full" operators */
 void Q_pm_psi(spinor * const l, spinor * const k)

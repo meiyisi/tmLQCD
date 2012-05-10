@@ -305,6 +305,19 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
         iter = bicgstab_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi);
       }
     }
+    else if(solver_flag == BICG) {
+      if(g_proc_id == 0) {printf("# Using BiCG!\n"); fflush(stdout);}
+      if(use_preconditioning==1 && g_precWS!=NULL){
+        //if(g_proc_id == 0) {printf("# Using preconditioning (which one?)!\n");}
+        //iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi_prec, &D_dagg_psi_prec);
+        
+        if(g_proc_id == 0) {printf("# Not using preconditioning (which one?)!\n");}
+		iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi, &D_dagg_psi);
+      } else {
+        if(g_proc_id == 0) {printf("# Not using preconditioning (which one?)!\n");}
+        iter = bicg_complex(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], max_iter, precision, rel_prec, VOLUME, &D_psi, &D_dagg_psi);
+      }
+    }
     else if(solver_flag == CGS) {
       if(g_proc_id == 0) {printf("# Using CGS!\n"); fflush(stdout);}
 

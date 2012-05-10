@@ -762,6 +762,12 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to BiCGstab line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  bicg {
+    optr->solver=15;
+    if(myverbose) printf("  Solver set to BiCG line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
+ 
   pcg {
     optr->solver=9;
     if(myverbose) printf("  Solver set to PCG line %d operator %d\n", line_of_file, current_operator);

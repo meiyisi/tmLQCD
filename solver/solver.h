@@ -35,6 +35,7 @@
 #define CGMMS 12
 #define MIXEDCG 13
 #define MCR 14
+#define BICG 15
 
 #include"solver/matrix_mult_typedef.h"
 
@@ -42,6 +43,7 @@
 #include"solver/gmres_dr.h"
 #include"solver/fgmres.h"
 #include"solver/bicgstab_complex.h"
+#include"solver/bicg_complex.h"
 #include"solver/cgs_real.h"
 #include"solver/bicgstabell.h"
 #include"solver/bicgstab2.h"

@@ -47,7 +47,7 @@ int mcr(spinor * const P, spinor * const Q,
 	double norm_sq, err;
 	spinor * xi, * Axi, * chi, * Achi, *tmp;
 	_Complex double alpha, beta;
-	_Complex double one;
+	static _Complex double one = 1.0;
 	double norm;
 	double atime, etime;
 	spinor ** solver_field = NULL;
@@ -71,7 +71,6 @@ int mcr(spinor * const P, spinor * const Q,
 	chi = solver_field[2];
 	Achi = solver_field[3];
 	tmp = solver_field[4];
-	one = 1.0;
 
 	norm_sq = square_norm(Q, N, 1);
 	if(norm_sq < 1.e-32) {
