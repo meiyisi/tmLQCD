@@ -23,6 +23,6 @@
 #include "su3.h"
 
 /* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are complex constants */
-void assign_mul_add_mul(spinor * const R, const _Complex double c1, spinor * const S, const _Complex double c2, const int N){
+void assign_mul_add_mul(spinor * const R, const _Complex double c1, spinor * const S, const _Complex double c2, const int N);
  
 #endif

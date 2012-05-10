@@ -141,6 +141,23 @@ int mcr(spinor * const P, spinor * const Q,
 		}
 
 	}
+
+    /* check if the iteration converges in the last restart cycle */
+    if (restart == max_restarts) {
+        f(tmp, P);
+        diff(chi, Q, tmp, N);
+
+        err = square_norm(chi, N, 1);
+        if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+            printf("mCR: %d\t%g true residue\n", iter, err); 
+            fflush(stdout);
+        }
+        if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
+			finalize_solver(solver_field, nr_sf);
+            return(iter);
+        }
+    }
+
 	finalize_solver(solver_field, nr_sf);
 	return(-1);
 }

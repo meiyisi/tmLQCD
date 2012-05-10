@@ -448,13 +448,13 @@ inline void rmQuotes(char *str){
   }
 }
 
-
 <INITDEFLATION>Init{SPC}* {
  if(myverbose) printf("Initialising DEFLATION line %d\n", line_of_file); 
  BEGIN(DEFLATION);
  }
 <DEFLATION>{
-  {SPC}*GlobalVectorNum{SPC}*={SPC}*{DIGIT}+ {
+  
+  {SPC}*GlobalVectorsNum{SPC}*={SPC}*{DIGIT}+ {
     sscanf(yytext, " %[2a-zA-Z] = %d", name, &a);
     g_N_s = a;
     if(myverbose) printf("Number of global vectors set to %d line %d\n", a, line_of_file);
@@ -506,13 +506,13 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("LittleGMRESMParameter set to %d line %d\n", a, line_of_file);
   }
 
-  {SPC}*LittleDLowPrecision{EQL}{FLT} {
+  {SPC}*LittleSolverLowPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     little_solver_low_prec = c;
     if(myverbose) printf("Low precision for little Dirac solver set to %e line %d\n", c, line_of_file);
   }
 
-  {SPC}*LittleDHighPrecision{EQL}{FLT} {
+  {SPC}*LittleSolverHighPrecision{EQL}{FLT} {
     sscanf(yytext, " %[2a-zA-Z] = %lf", name, &c);
     little_solver_high_prec = c;
     if(myverbose) printf("High precision for little Dirac solver set to %e line %d\n", c, line_of_file);
@@ -1984,7 +1984,7 @@ inline void rmQuotes(char *str){
 }
 
 
-<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU>\n   {
+<INITMONOMIAL,DETMONOMIAL,CLDETMONOMIAL,CLDETRATMONOMIAL,NDPOLYMONOMIAL,GAUGEMONOMIAL,SFGAUGEMONOMIAL,INTEGRATOR,INITINTEGRATOR,INITMEASUREMENT,PIONNORMMEAS,ONLINEMEAS,INITOPERATOR,TMOP,DBTMOP,OVERLAPOP,WILSONOP,CLOVEROP,POLYMONOMIAL,PLOOP,INITGPU,GPU,INITDEFLATION,DEFLATION>\n   {
   line_of_file++;
 }
 <*>\n                       {

@@ -346,8 +346,8 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
     else if(solver_flag == MCR) {
       if(g_proc_id == 0) {printf("# Using mCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
       /* iter = mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &D_psi); */
-      gamma5(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], VOLUME);
-      iter = mcr(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_plus_psi);
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
+      iter = mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_plus_psi);
       /*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
     }
  
