@@ -77,6 +77,7 @@ void project(spinor * const out, spinor * const in) {
   int i,j, i_e, i_o, iter;
   int evenodd = 0;
   int usePL = 0;
+  int little_m = little_gmres_m_parameter;
   int vol = block_list[0].volume;
   _Complex double * v, * w;
   double prec;
@@ -126,16 +127,17 @@ void project(spinor * const out, spinor * const in) {
   }
   
   
-  /* if(dfl_sloppy_prec) prec = dfl_little_D_prec;*/
-  if(dfl_sloppy_prec) prec = 1.e-12;
-  else prec = 1.e-24;
-  
+  if(dfl_sloppy_prec) prec = little_solver_high_prec;
+  else prec = little_solver_low_prec;
   
   
   if(!usePL) {
     if(evenodd) {
-      iter = gcr4complex(invvec_eo,inprod_o,10,1000,prec,1,nb_blocks*g_N_s,1,nb_blocks*9*g_N_s,&little_D_sym);
-      
+		if (little_solver == 0)
+      		iter = gcr4complex(invvec_eo,inprod_o,little_m,1000,prec,1,nb_blocks*g_N_s,1,nb_blocks*9*g_N_s,&little_D_sym);
+		else
+			iter = mcr4complex(invvec_eo,inprod_o, 10000, 1, prec,1,nb_blocks*g_N_s,1,nb_blocks*9*g_N_s,&little_D_sym);
+
       little_D_hop(0,ctmp, invvec_eo);
       little_D_ee_inv(invvec_eo,ctmp);
       little_Dhat_rhs(0,invvec_eo, -1., inprod_e);
@@ -159,7 +161,7 @@ void project(spinor * const out, spinor * const in) {
       }
     }
     else {
-      iter = gcr4complex(invvec, inprod, 10, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
+      iter = gcr4complex(invvec, inprod, little_m, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);
       if(g_proc_id == 0 && g_debug_level > 0) {/*CT: was "g_debug_level > -1" */
 	printf("lgcr number of iterations %d (no P_L)\n", iter);
       }
@@ -168,7 +170,7 @@ void project(spinor * const out, spinor * const in) {
   else {
     if(evenodd) {
       little_P_L_sym(v, inprod_o);
-      iter = gcr4complex(w, v, 10, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D_sym);
+      iter = gcr4complex(w, v, little_m, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D_sym);
       little_P_R_sym(v, w);
 /*      little_project(w, inprod_o, g_N_s);*/
       little_project_eo(w,inprod_o,g_N_s);
@@ -197,7 +199,7 @@ void project(spinor * const out, spinor * const in) {
     }
     else {
       little_P_L(v, inprod);
-      iter = gcr4complex(w, v, 10, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
+      iter = gcr4complex(w, v, little_m, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_P_L_D);
       little_P_R(v, w);
       little_project(w, inprod, g_N_s);
       for(i = 0; i < nb_blocks*g_N_s; ++i)
@@ -961,7 +963,7 @@ void check_local_D()
   }
 
   zero_spinor_field(work_fields[1], VOLUME);
-  Msap_eo(work_fields[1], work_fields[0], 2);
+  Msap_eo(work_fields[1], work_fields[0], 2, 3);
   D_psi(work_fields[2], work_fields[1]);
   diff(work_fields[3], work_fields[2], work_fields[0], VOLUME);
   nrm = square_norm(work_fields[3], VOLUME, 1);

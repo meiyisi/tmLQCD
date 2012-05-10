@@ -126,7 +126,7 @@ void Msap(spinor * const P, spinor * const Q, const int Ncy) {
 }
 
 
-void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
+void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter) {
   int blk, ncy = 0, eo, vol;
   spinor * r, * a, * b;
   double nrm;
@@ -172,7 +172,7 @@ void Msap_eo(spinor * const P, spinor * const Q, const int Ncy) {
 	  /* a_odd = a_odd - b_odd */
 	  assign_mul_add_r(a_odd, -1., b_odd, vol);
 	  
-	  mrblk(b_odd, a_odd, 3, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
+	  mrblk(b_odd, a_odd, Niter, 1.e-31, 1, vol, &Mtm_plus_block_psi, blk);
 
 	  Block_H_psi(&block_list[blk], b_even, b_odd, EO);
 	  mul_one_pm_imu_inv(b_even, +1., vol);

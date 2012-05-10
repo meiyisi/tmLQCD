@@ -95,16 +95,15 @@ int gcr(spinor * const P, spinor * const Q,
     for(k = 0; k < m; k++) {
       
       if(precon == 0) {
-	assign(xi[k], rho, N);
+		assign(xi[k], rho, N);
       }
       else {
         zero_spinor_field(xi[k], N);  
-        Msap_eo(xi[k], rho, 6);   
- 	/* Msap(xi[k], rho, 8); */
+        Msap_eo(xi[k], rho, NcycleMsap, NiterMsap);   
       }
 	  
       dfl_sloppy_prec = 1;
-      dfl_little_D_prec = 1.e-12;
+      //dfl_little_D_prec = 1.e-12;
       f(tmp, xi[k]); 
 	  
       /* tmp will become chi[k] */

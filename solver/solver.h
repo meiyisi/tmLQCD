@@ -34,6 +34,7 @@
 #define DFLFGMRES 11
 #define CGMMS 12
 #define MIXEDCG 13
+#define MCR 14
 
 #include"solver/matrix_mult_typedef.h"
 
@@ -51,6 +52,7 @@
 #include"solver/eigenvalues.h"
 #include"solver/cg_mms_tm.h"
 #include"solver/mixed_cg_her.h"
+#include"solver/mcr.h"
 
 #include"solver/sub_low_ev.h"
 #include"solver/gmres_precon.h"
