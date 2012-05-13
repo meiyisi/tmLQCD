@@ -237,8 +237,8 @@ EXTERN int usePL;
 EXTERN int little_solver;
 EXTERN int little_evenodd;
 EXTERN int little_gmres_m_parameter;
-EXTERN int little_solver_low_prec;
-EXTERN int little_solver_high_prec;
+EXTERN double little_solver_low_prec;
+EXTERN double little_solver_high_prec;
 
 #ifdef MPI
 EXTERN MPI_Status status;
