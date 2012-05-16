@@ -243,6 +243,20 @@ void Mtm_plus_sym_psi(spinor * const l, spinor * const k){
   diff(l, k, g_spinor_field[DUM_MATRIX], VOLUME/2);
 }
 
+void Mtm_plus_sym_dagg_psi(spinor * const l, spinor * const k){
+
+  gamma5(l, k, VOLUME/2);
+  mul_one_pm_imu_inv(l, -1., VOLUME/2);
+  Hopping_Matrix(EO, g_spinor_field[DUM_MATRIX+1], l);
+  mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], -1., VOLUME/2);
+  Hopping_Matrix(OE, g_spinor_field[DUM_MATRIX], g_spinor_field[DUM_MATRIX+1]);
+  gamma5(g_spinor_field[DUM_MATRIX+1], g_spinor_field[DUM_MATRIX], VOLUME/2);
+
+  diff(l, k, g_spinor_field[DUM_MATRIX+1], VOLUME/2);
+}
+
+
+
 void Mtm_plus_sym_psi_nocom(spinor * const l, spinor * const k){
   Hopping_Matrix_nocom(EO, g_spinor_field[DUM_MATRIX+1], k);
   mul_one_pm_imu_inv(g_spinor_field[DUM_MATRIX+1], +1., VOLUME/2);
