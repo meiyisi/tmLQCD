@@ -17,11 +17,13 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _MSAP_H
-#define _MSAP_H
+#ifndef _BICG_COMPLEX_H
+#define _BICG_COMPLEX_H
 
-void Msap(spinor * const P, spinor * const Q, const int Ncy);
-void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter);
-void Mtm_plus_block_psi(spinor * const l, spinor * const k, const int i);
-void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i);
+#include"solver/matrix_mult_typedef.h"
+#include"su3.h"
+
+int bicg_complex(spinor * const, spinor * const, const int max_iter, double eps_sq, 
+		     const int rel_prec, const int N, matrix_mult f, matrix_mult fdagg);
+
 #endif

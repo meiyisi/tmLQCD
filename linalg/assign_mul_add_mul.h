@@ -17,11 +17,12 @@
  * along with tmLQCD.  If not, see <http://www.gnu.org/licenses/>.
  ***********************************************************************/
 
-#ifndef _MSAP_H
-#define _MSAP_H
+#ifndef _ASSIGN_MUL_ADD_MUL_H
+#define _ASSIGN_MUL_ADD_MUL_H
 
-void Msap(spinor * const P, spinor * const Q, const int Ncy);
-void Msap_eo(spinor * const P, spinor * const Q, const int Ncy, const int Niter);
-void Mtm_plus_block_psi(spinor * const l, spinor * const k, const int i);
-void Mtm_plus_sym_block_psi(spinor * const l, spinor * const k, const int i);
+#include "su3.h"
+
+/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are complex constants */
+void assign_mul_add_mul(spinor * const R, const _Complex double c1, spinor * const S, const _Complex double c2, const int N);
+ 
 #endif

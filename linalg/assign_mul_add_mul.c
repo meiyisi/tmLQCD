@@ -20,54 +20,37 @@
 #ifdef HAVE_CONFIG_H
 # include<config.h>
 #endif
-#ifdef OMP
-# include <omp.h>
-#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include "su3.h"
-#include "assign_add_mul.h"
+#include "assign_mul_add_mul.h"
 
-
-/*	(*R) = (*R) + c*(*S)        c is a complex constant	*/
-void assign_add_mul(spinor * const R, spinor * const S, const _Complex double c, const int N)
-{
-#ifdef OMP
-#pragma omp parallel
-  {
-#endif
+/* Makes (*R)=c1*(*R)+c2*(*S) , c1 and c2 are complex constants */
+void assign_mul_add_mul(spinor * const R, const _Complex double c1, spinor * const S, const _Complex double c2, const int N){
+  int ix;
   spinor *r,*s;
 
-#ifdef OMP
-#pragma omp for
-#endif
-  for (int ix=0; ix<N; ix++)
-  {
+  for (ix=0;ix<N;ix++){
+
     r=(spinor *) R + ix;
     s=(spinor *) S + ix;
 
-    r->s0.c0 += c * s->s0.c0;
-    r->s0.c1 += c * s->s0.c1;
-    r->s0.c2 += c * s->s0.c2;
+    r->s0.c0 = c1 * r->s0.c0 + c2 * s->s0.c0;
+    r->s0.c1 = c1 * r->s0.c1 + c2 * s->s0.c1;
+    r->s0.c2 = c1 * r->s0.c2 + c2 * s->s0.c2;
+  
+	r->s1.c0 = c1 * r->s1.c0 + c2 * s->s1.c0;
+    r->s1.c1 = c1 * r->s1.c1 + c2 * s->s1.c1;
+    r->s1.c2 = c1 * r->s1.c2 + c2 * s->s1.c2;
 
-    r->s1.c0 += c * s->s1.c0;
-    r->s1.c1 += c * s->s1.c1;
-    r->s1.c2 += c * s->s1.c2;
+    r->s2.c0 = c1 * r->s2.c0 + c2 * s->s2.c0;
+    r->s2.c1 = c1 * r->s2.c1 + c2 * s->s2.c1;
+    r->s2.c2 = c1 * r->s2.c2 + c2 * s->s2.c2;
 
-    r->s2.c0 += c * s->s2.c0;
-    r->s2.c1 += c * s->s2.c1;
-    r->s2.c2 += c * s->s2.c2;
-
-    r->s3.c0 += c * s->s3.c0;
-    r->s3.c1 += c * s->s3.c1;
-    r->s3.c2 += c * s->s3.c2;
+    r->s3.c0 = c1 * r->s3.c0 + c2 * s->s3.c0;
+    r->s3.c1 = c1 * r->s3.c1 + c2 * s->s3.c1;
+    r->s3.c2 = c1 * r->s3.c2 + c2 * s->s3.c2;
   }
-
-#ifdef OMP
-  } /* OpenMP closing brace */
-#endif
-
 }
-
 
