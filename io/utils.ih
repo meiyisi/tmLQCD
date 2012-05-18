@@ -32,6 +32,9 @@
 #ifdef MPI
 # include <mpi.h>
 #endif
+#ifdef OMP
+# include <omp.h>
+#endif
 #include <unistd.h>
 #include <math.h>
 

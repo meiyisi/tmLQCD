@@ -103,6 +103,20 @@ int write_first_messages(FILE * parameterfile, const int inv) {
   fprintf(parameterfile,
 	  "# the code is compiled with MPI IO / Lemon\n");
 #  endif
+
+#ifdef OMP
+#pragma omp parallel
+{	
+	int np = omp_get_num_threads();
+	if(omp_get_thread_num() == 0) {
+		printf("# the code is compiled with OpenMP\n");
+		printf("# number of threads per process is %d\n", omp_get_num_threads());
+		fprintf(parameterfile, "# the code is compiled with OpenMP\n");
+		fprintf(parameterfile, "# number of threads per process is %d\n", omp_get_num_threads());
+	}
+}
+#endif
+
 #endif
   if( bc_flag == 0 ) {
     printf("# Periodic boundary conditions are used\n");
