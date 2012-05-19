@@ -37,6 +37,7 @@
 #include "solver_field.h"
 #include"mcr.h"
 #include"time.h"
+#include "gettime.h"
 
 int mcr(spinor * const P, spinor * const Q, 
 		const int m, const int max_restarts,
@@ -60,11 +61,12 @@ int mcr(spinor * const P, spinor * const Q,
 		init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
 	}
 
-#ifdef MPI
-	atime = MPI_Wtime();
-#else
-	atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif
+//#ifdef MPI
+//	atime = MPI_Wtime();
+//#else
+//	atime = ((double)clock())/((double)(CLOCKS_PER_SEC));
+//#endif
+	atime = gettime();
 
 	xi = solver_field[0];
 	Axi = solver_field[1];
@@ -114,11 +116,12 @@ int mcr(spinor * const P, spinor * const Q,
 	
 			err = square_norm(chi, N, 1);
 			iter ++;
-#ifdef MPI
-			etime = MPI_Wtime();
-#else
-			etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif
+//#ifdef MPI
+//			etime = MPI_Wtime();
+//#else
+//			etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
+//#endif
+			etime = gettime();
 			if(g_proc_id == g_stdio_proc && g_debug_level > 0){
 				printf("# mCR: %d\t%g iterated residue, time spent %f s\n", iter, err, (etime - atime)); 
 				fflush(stdout);
