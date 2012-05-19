@@ -149,6 +149,12 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
       iter = gcr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, 0, &Mtm_plus_sym_psi);
     }
+	else if (solver_flag == MCR) {
+      	if(g_proc_id == 0) {printf("# Using MCR! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      	gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+		iter = mcr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, 0, &Qtm_pm_psi);
+      Qtm_minus_psi(Odd_new, Odd_new);
+	}
     else if(solver_flag == GMRESDR) {
       if(g_proc_id == 0) {printf("# Using GMRES-DR! m = %d, NrEv = %d\n", 
          gmres_m_parameter, gmresdr_nr_ev); fflush(stdout);}

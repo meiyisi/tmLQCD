@@ -95,8 +95,13 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     assign_mul_add_r(solver_field[0], -alpha_cg, solver_field[1], N);
     err=square_norm(solver_field[0], N, 1);
 
+#ifdef MPI
+  etime = MPI_Wtime();
+#else
+  etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
+#endif  
     if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-      printf("CG: iterations: %d res^2 %e\n", iteration, err);
+     printf("CG: iterations: %d res^2 %e time spent %e s\n", iteration, err, etime-atime);
       fflush(stdout);
     }
 

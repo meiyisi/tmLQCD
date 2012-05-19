@@ -135,7 +135,7 @@ void project(spinor * const out, spinor * const in) {
 			if (little_solver == 0)
 				iter = gcr4complex(invvec_eo, inprod_o, little_m, 1000, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
 			else
-				iter = mcr4complex(invvec_eo, inprod_o, little_m, 1, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
+				iter = mcr4complex(invvec_eo, inprod_o, 1000, 1000, prec, 1, nb_blocks*g_N_s, 1, nb_blocks*9*g_N_s, &little_D_sym);
 
 			little_D_hop(0,ctmp, invvec_eo);
 			little_D_ee_inv(invvec_eo,ctmp);
@@ -167,7 +167,7 @@ void project(spinor * const out, spinor * const in) {
 				}	
 			}
 			else { 
-				iter = mcr4complex(invvec, inprod, little_m,1,prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);	
+				iter = mcr4complex(invvec, inprod, 1000, 1000, prec, 1, nb_blocks * g_N_s, 1, nb_blocks * 9 * g_N_s, &little_D);	
 				if(g_proc_id == 0 && g_debug_level > 0) {
 					printf("lmcr number of iterations %d (no P_L)\n", iter);
 				}	
