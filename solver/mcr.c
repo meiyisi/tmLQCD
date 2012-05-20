@@ -53,6 +53,7 @@ int mcr(spinor * const P, spinor * const Q,
 	double atime, etime;
 	spinor ** solver_field = NULL;
 	const int nr_sf = 5;
+  	int save_sloppy = g_sloppy_precision;
 
 	if(N == VOLUME) {
 		init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
@@ -122,7 +123,7 @@ int mcr(spinor * const P, spinor * const Q,
 //			etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
 //#endif
 			etime = gettime();
-			if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+			if(g_proc_id == g_stdio_proc && g_debug_level > 3){
 				printf("# mCR: %d\t%g iterated residue, time spent %f s\n", iter, err, (etime - atime)); 
 				fflush(stdout);
 			}
@@ -130,7 +131,16 @@ int mcr(spinor * const P, spinor * const Q,
 			if((k == m-1) || ((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
 				break;
 			}
-	
+
+
+			#ifdef _USE_HALFSPINOR
+    		if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*norm_sq) && (rel_prec == 1))) {
+      			g_sloppy_precision = 1;
+      		if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+        		printf("sloppy precision on\n"); fflush( stdout);
+      			}
+    		}
+			#endif
 
 			f(Achi, chi); 
 
@@ -159,7 +169,7 @@ int mcr(spinor * const P, spinor * const Q,
             return(iter);
         }
     }
-
+	g_sloppy_precision = save_sloppy;
 	finalize_solver(solver_field, nr_sf);
 	return(-1);
 }

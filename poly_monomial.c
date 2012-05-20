@@ -308,8 +308,12 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
     Qtm_pm_psi(spinor2, spinor1);
 
     /* solve (Q+)*(Q-)*P((Q+)*(Q-)) *x=y */
-    cg_her(spinor1, spinor2,
-	   1000,mnl->accprec,g_relative_precision_flag,VOLUME/2, Qtm_pm_Ptm_pm_psi);
+    if (mnl->solver == MCR)
+		mcr(spinor1, spinor2,
+		1000, 1000, mnl->accprec,g_relative_precision_flag,VOLUME/2, 0, Qtm_pm_Ptm_pm_psi);
+    else
+		cg_her(spinor1, spinor2,
+	   	1000,mnl->accprec,g_relative_precision_flag,VOLUME/2, Qtm_pm_Ptm_pm_psi);
     
     /*  phi= Bdagger phi  */
     for(j = 0; j < (mnl->MDPolyDegree/2); j++){
@@ -324,14 +328,14 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
       g_mu = mnl->mu2;
       boundary(mnl->kappa2);
       zero_spinor_field(mnl->pf,VOLUME/2);
-      if(mnl->solver == CG) ITER_MAX_BCG = 0;
+      if(mnl->solver == CG || mnl->solver == MCR) ITER_MAX_BCG = 0;
       ITER_MAX_CG = mnl->maxiter;
       mnl->iter0 += bicg(mnl->pf, spinor1, mnl->accprec, g_relative_precision_flag);
       
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
       
-      if(mnl->solver != CG) {
+      if(mnl->solver != CG && mnl->solver != MCR) {
 	chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
 			    mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
       }

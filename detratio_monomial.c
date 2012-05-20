@@ -78,7 +78,7 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
 
-    if(mnl->solver != CG) {
+    if(mnl->solver == BICGSTAB) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
     }
 
@@ -89,7 +89,11 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
     /* X_W -> DUM_DERI+1 */
     chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
 		 mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
-    mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
+	if (mnl->solver == MCR) 
+		mnl->iter1 += mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, mnl->maxiter, 
+			 mnl->forceprec, g_relative_precision_flag, VOLUME/2, 0, &Qtm_pm_psi);
+ 	else
+   		mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
 			 mnl->forceprec, g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
     chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -155,6 +159,18 @@ void detratio_derivative(const int no, hamiltonian_field_t * const hf) {
       
       /* Y_W -> DUM_DERI  */
       Q_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+    }
+    else if(mnl->solver == MCR) {
+     	chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
+		   	mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
+      	mnl->iter1 += mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], 
+			mnl->maxiter, mnl->maxiter, mnl->forceprec, g_relative_precision_flag, 
+			VOLUME, 0, &Q_pm_psi);
+      	chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+			mnl->csg_N, &mnl->csg_n, VOLUME/2);
+      
+      	/* Y_W -> DUM_DERI  */
+      	Q_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
     }
     else {
       /* Invert first Q_+ */
@@ -222,13 +238,13 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu2;
     boundary(mnl->kappa2);
     zero_spinor_field(mnl->pf,VOLUME/2);
-    if(mnl->solver == CG) ITER_MAX_BCG = 0;
+    if(mnl->solver == CG || mnl->solver == MCR) ITER_MAX_BCG = 0;
     ITER_MAX_CG = mnl->maxiter;
     mnl->iter0 += bicg(mnl->pf, g_spinor_field[3], mnl->accprec, g_relative_precision_flag);
 
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(mnl->solver != CG) {
+    if(mnl->solver != CG && mnl->solver != MCR) {
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
     }
@@ -245,7 +261,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
 				   g_relative_precision_flag, VOLUME, Q_plus_psi);
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
-    if(mnl->solver != CG) {
+    if(mnl->solver != CG && mnl->solver != MCR) {
       chrono_add_solution(mnl->pf, mnl->csg_field2, mnl->csg_index_array2,
 			  mnl->csg_N2, &mnl->csg_n2, VOLUME/2);
     }
@@ -270,7 +286,7 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     Qtm_plus_psi(g_spinor_field[DUM_DERI+5], mnl->pf);
     g_mu = mnl->mu;
     boundary(mnl->kappa);
-    if(mnl->solver == CG) ITER_MAX_BCG = 0;
+    if(mnl->solver == CG || mnl->solver == MCR) ITER_MAX_BCG = 0;
     ITER_MAX_CG = mnl->maxiter;
     chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);

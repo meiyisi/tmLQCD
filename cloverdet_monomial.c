@@ -72,7 +72,7 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // we invert it for the even sites only
   sw_invert(EE, mnl->mu);
   
-  if(mnl->solver != CG && g_proc_id == 0) {
+  if(mnl->solver == BICGSTAB && g_proc_id == 0) {
     fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (cloverdet_monomial.c)\n");
   }
   
@@ -80,7 +80,11 @@ void cloverdet_derivative(const int id, hamiltonian_field_t * const hf) {
   // X_o -> DUM_DERI+1
   chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-  mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, 
+	if (mnl->solver == MCR)
+  		mnl->iter1 += mcr(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->maxiter, mnl->forceprec, 
+		       g_relative_precision_flag, VOLUME/2, 0, mnl->Qsq);
+ 	else
+  		mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, 
 		       g_relative_precision_flag, VOLUME/2, mnl->Qsq);
   chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -179,7 +183,11 @@ double cloverdet_acc(const int id, hamiltonian_field_t * const hf) {
   chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
   g_sloppy_precision_flag = 0;
-  mnl->iter0 = cg_her(g_spinor_field[2], mnl->pf, mnl->maxiter, mnl->accprec,  
+	if (mnl->solver == MCR)
+	  	mnl->iter0 = mcr(g_spinor_field[2], mnl->pf, mnl->maxiter, mnl->maxiter, mnl->accprec,  
+		      g_relative_precision_flag, VOLUME/2, 0, mnl->Qsq); 
+ 	else
+  		mnl->iter0 = cg_her(g_spinor_field[2], mnl->pf, mnl->maxiter, mnl->accprec,  
 		      g_relative_precision_flag, VOLUME/2, mnl->Qsq); 
   mnl->Qm(g_spinor_field[2], g_spinor_field[2]);
   

@@ -78,7 +78,7 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   // we invert it for the even sites only including mu
   sw_invert(EE, mnl->mu);
   
-  if(mnl->solver != CG) {
+  if(mnl->solver == BICGSTAB) {
     fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (detratio_monomial.c)\n");
   }
   
@@ -89,7 +89,11 @@ void cloverdetratio_derivative_orig(const int no, hamiltonian_field_t * const hf
   /* X_W -> DUM_DERI+1 */
   chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
 	       mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-  mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
+	if (mnl->solver == MCR)
+  		mnl->iter1 += mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, mnl->maxiter,
+		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, 0, mnl->Qsq);
+ 	else
+  		mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
 		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq);
   chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -193,7 +197,11 @@ void cloverdetratio_derivative(const int no, hamiltonian_field_t * const hf) {
   // X_W -> DUM_DERI+1 
   chrono_guess(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->csg_field, 
 	       mnl->csg_index_array, mnl->csg_N, mnl->csg_n, VOLUME/2, mnl->Qsq);
-  mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
+	if (mnl->solver == MCR)
+		mnl->iter1 += mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, mnl->maxiter,
+		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, 0, mnl->Qsq);
+ 	else
+  		mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI+2], mnl->maxiter, 
 		       mnl->forceprec, g_relative_precision_flag, VOLUME/2, mnl->Qsq);
   chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 		      mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -257,7 +265,11 @@ void cloverdetratio_heatbath(const int id, hamiltonian_field_t * const hf) {
   g_mu3 = mnl->rho2;
   zero_spinor_field(mnl->pf,VOLUME/2);
 
-  mnl->iter0 = cg_her(mnl->pf, g_spinor_field[3], mnl->maxiter, mnl->accprec,  
+	if (mnl->solver == MCR)
+  		mnl->iter0 = mcr(mnl->pf, g_spinor_field[3], mnl->maxiter, mnl->maxiter, mnl->accprec,  
+		      g_relative_precision_flag, VOLUME/2, 0, mnl->Qsq); 
+	else
+  		mnl->iter0 = cg_her(mnl->pf, g_spinor_field[3], mnl->maxiter, mnl->accprec,  
 		      g_relative_precision_flag, VOLUME/2, mnl->Qsq); 
 
   chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -287,7 +299,11 @@ double cloverdetratio_acc(const int id, hamiltonian_field_t * const hf) {
   chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->csg_field, mnl->csg_index_array, 
 	       mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
   g_sloppy_precision_flag = 0;    
-  mnl->iter0 += cg_her(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->maxiter, mnl->accprec,  
+	if (mnl->solver == MCR)
+  		mnl->iter0 += mcr(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->maxiter, mnl->maxiter, mnl->accprec,  
+		      g_relative_precision_flag, VOLUME/2, 0, mnl->Qsq);
+ 	else
+  		mnl->iter0 += cg_her(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->maxiter, mnl->accprec,  
 		      g_relative_precision_flag, VOLUME/2, mnl->Qsq);
   mnl->Qm(g_spinor_field[3], g_spinor_field[3]);
 

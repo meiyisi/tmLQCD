@@ -1267,11 +1267,17 @@ inline void rmQuotes(char *str){
     mnl->solver = 1;
     BEGIN(solver_caller);
   }
-  bicgstab {
+  BICGSTAB {
     if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
     mnl->solver = 0;
     BEGIN(solver_caller);
   }
+  MCR {
+    if(myverbose) printf("  Solver set to \"%s\" line %d monomial %d\n", yytext, line_of_file, current_monomial);
+    mnl->solver = 14;
+    BEGIN(solver_caller);
+  }
+
 }
 
 <GTYPE>{

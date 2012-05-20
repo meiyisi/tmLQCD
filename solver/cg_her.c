@@ -95,14 +95,10 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
     assign_mul_add_r(solver_field[0], -alpha_cg, solver_field[1], N);
     err=square_norm(solver_field[0], N, 1);
 
-#ifdef MPI
-  etime = MPI_Wtime();
-#else
-  etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-#endif  
-    if(g_proc_id == g_stdio_proc && g_debug_level > 1) {
-     printf("CG: iterations: %d res^2 %e time spent %e s\n", iteration, err, etime-atime);
-      fflush(stdout);
+	etime = gettime();
+    if(g_proc_id == g_stdio_proc && g_debug_level > 3) {
+     	printf("CG: iterations: %d res^2 %e time spent %e s\n", iteration, err, etime-atime);
+      	fflush(stdout);
     }
 
     if (((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*squarenorm) && (rel_prec == 1))) {
@@ -124,6 +120,16 @@ int cg_her(spinor * const P, spinor * const Q, const int max_iter,
   }
   etime = gettime();
   g_sloppy_precision = save_sloppy;
+  
+	f(solver_field[0], P);
+    diff(solver_field[1], Q, solver_field[0], N);
+	err = square_norm(solver_field[1], N, 1);
+	if(g_proc_id == g_stdio_proc && g_debug_level > 3){
+    	printf("CG: %d\t%g true residue\n", iteration, err); 
+      	fflush(stdout);
+	}
+ 
+
   /* 2 A + 2 Nc Ns + N_Count ( 2 A + 10 Nc Ns ) */
   /* 2*1320.0 because the linalg is over VOLUME/2 */
   flops = (2*(2*1320.0+2*3*4) + 2*3*4 + iteration*(2.*(2*1320.0+2*3*4) + 10*3*4))*N/1.0e6f;

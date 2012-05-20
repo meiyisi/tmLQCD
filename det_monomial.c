@@ -71,15 +71,21 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
     g_mu = mnl->mu;
     boundary(mnl->kappa);
 
-    if(mnl->solver != CG) {
+	
+    if(mnl->solver == BICGSTAB) {
       fprintf(stderr, "Bicgstab currently not implemented, using CG instead! (det_monomial.c)\n");
     }
+	
     
     /* Invert Q_{+} Q_{-} */
     /* X_o -> DUM_DERI+1 */
     chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_pm_psi);
-    mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, 
+    if (mnl->solver == MCR)
+		mnl->iter1 += mcr(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->maxiter, mnl->forceprec, 
+			 g_relative_precision_flag, VOLUME/2, 0, &Qtm_pm_psi);
+	else
+		mnl->iter1 += cg_her(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->forceprec, 
 			 g_relative_precision_flag, VOLUME/2, &Qtm_pm_psi);
     chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -123,6 +129,21 @@ void det_derivative(const int id, hamiltonian_field_t * const hf) {
       Q_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
       
     }
+    else if(mnl->solver == MCR) {
+      /* Invert Q_{+} Q_{-} */
+      /* X -> DUM_DERI+1 */
+      chrono_guess(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
+      mnl->iter1 += mcr(g_spinor_field[DUM_DERI+1], mnl->pf, mnl->maxiter, mnl->maxiter,
+			mnl->forceprec, g_relative_precision_flag, VOLUME, 0, &Q_pm_psi);
+      chrono_add_solution(g_spinor_field[DUM_DERI+1], mnl->csg_field, mnl->csg_index_array,
+			  mnl->csg_N, &mnl->csg_n, VOLUME/2);
+
+      /* Y -> DUM_DERI  */
+      Q_minus_psi(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI+1]);
+      
+    }
+ 
     else {
       /* Invert first Q_+ */
       /* Y -> DUM_DERI  */
@@ -209,7 +230,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
   boundary(mnl->kappa);
   if(mnl->even_odd_flag) {
 
-    if(mnl->solver == CG) {
+    if(mnl->solver == CG || mnl->solver == MCR) {
       ITER_MAX_BCG = 0;
     }
     chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
@@ -227,6 +248,15 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
       mnl->iter0 = cg_her(g_spinor_field[DUM_DERI+5], mnl->pf, 
 			  mnl->maxiter, mnl->accprec, g_relative_precision_flag, 
 			  VOLUME, Q_pm_psi);
+      Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
+      /* Compute the energy contr. from first field */
+      mnl->energy1 = square_norm(g_spinor_field[2], VOLUME, 1);
+    }
+    else if(mnl->solver == MCR) {
+      chrono_guess(g_spinor_field[DUM_DERI+5], mnl->pf, mnl->csg_field, mnl->csg_index_array,
+		   mnl->csg_N, mnl->csg_n, VOLUME/2, &Q_pm_psi);
+      mnl->iter0 = mcr(g_spinor_field[DUM_DERI+5], mnl->pf, mnl->maxiter, mnl->maxiter, 
+			mnl->accprec, g_relative_precision_flag, VOLUME, 0, Q_pm_psi);
       Q_minus_psi(g_spinor_field[2], g_spinor_field[DUM_DERI+5]);
       /* Compute the energy contr. from first field */
       mnl->energy1 = square_norm(g_spinor_field[2], VOLUME, 1);
