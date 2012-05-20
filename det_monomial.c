@@ -236,7 +236,7 @@ double det_acc(const int id, hamiltonian_field_t * const hf) {
     chrono_guess(g_spinor_field[2], mnl->pf, mnl->csg_field, mnl->csg_index_array,
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
     g_sloppy_precision_flag = 0;
-    mnl->iter0 = bicg(g_spinor_field[2], mnl->pf, mnl->accprec, g_relative_precision_flag);
+    mnl->iter0 = bicg(g_spinor_field[2], mnl->pf, mnl->accprec, g_relative_precision_flag, mnl->solver);
     g_sloppy_precision_flag = save_sloppy;
     /* Compute the energy contr. from first field */
     mnl->energy1 = square_norm(g_spinor_field[2], VOLUME/2, 1);

@@ -20,6 +20,7 @@
 #define _LINSOLVE_H
 
 int solve_cg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec);
-int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec);
+int solve_mcr(spinor * const k, spinor * const l, double eps_sq, const int rel_prec);
+int bicg(spinor * const k, spinor * const l, double eps_sq, const int rel_prec, const int alt_solver);
 
 #endif

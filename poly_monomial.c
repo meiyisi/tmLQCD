@@ -330,7 +330,7 @@ void poly_heatbath(const int id, hamiltonian_field_t * const hf){
       zero_spinor_field(mnl->pf,VOLUME/2);
       if(mnl->solver == CG || mnl->solver == MCR) ITER_MAX_BCG = 0;
       ITER_MAX_CG = mnl->maxiter;
-      mnl->iter0 += bicg(mnl->pf, spinor1, mnl->accprec, g_relative_precision_flag);
+      mnl->iter0 += bicg(mnl->pf, spinor1, mnl->accprec, g_relative_precision_flag, mnl->solver);
       
       chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			  mnl->csg_N, &mnl->csg_n, VOLUME/2);

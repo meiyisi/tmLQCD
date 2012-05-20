@@ -240,7 +240,7 @@ void detratio_heatbath(const int id, hamiltonian_field_t * const hf) {
     zero_spinor_field(mnl->pf,VOLUME/2);
     if(mnl->solver == CG || mnl->solver == MCR) ITER_MAX_BCG = 0;
     ITER_MAX_CG = mnl->maxiter;
-    mnl->iter0 += bicg(mnl->pf, g_spinor_field[3], mnl->accprec, g_relative_precision_flag);
+    mnl->iter0 += bicg(mnl->pf, g_spinor_field[3], mnl->accprec, g_relative_precision_flag, mnl->solver);
 
     chrono_add_solution(mnl->pf, mnl->csg_field, mnl->csg_index_array,
 			mnl->csg_N, &mnl->csg_n, VOLUME/2);
@@ -291,7 +291,7 @@ double detratio_acc(const int id, hamiltonian_field_t * const hf) {
     chrono_guess(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->csg_field, mnl->csg_index_array, 
 		 mnl->csg_N, mnl->csg_n, VOLUME/2, &Qtm_plus_psi);
     g_sloppy_precision_flag = 0;    
-    mnl->iter0 += bicg(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->accprec, g_relative_precision_flag); 
+    mnl->iter0 += bicg(g_spinor_field[3], g_spinor_field[DUM_DERI+5], mnl->accprec, g_relative_precision_flag, mnl->solver); 
     g_sloppy_precision_flag = save_sloppy;
     /*     ITER_MAX_BCG = *saveiter_max; */
     /* Compute the energy contr. from second field */

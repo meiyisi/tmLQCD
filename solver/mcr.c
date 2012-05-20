@@ -135,10 +135,12 @@ int mcr(spinor * const P, spinor * const Q,
 
 			#ifdef _USE_HALFSPINOR
     		if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*norm_sq) && (rel_prec == 1))) {
-      			g_sloppy_precision = 1;
-      		if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
-        		printf("sloppy precision on\n"); fflush( stdout);
-      			}
+				if (g_sloppy_precision_flag == 1) {
+      				g_sloppy_precision = 1;
+      				if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+        				printf("sloppy precision on\n"); fflush( stdout);
+      				}
+				}
     		}
 			#endif
 
