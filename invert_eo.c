@@ -155,7 +155,14 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
 		iter = mcr(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, 0, &Qtm_pm_psi);
       Qtm_minus_psi(Odd_new, Odd_new);
 	}
-    else if(solver_flag == GMRESDR) {
+   	else if (solver_flag == MCRTWO) {
+      	if(g_proc_id == 0) {printf("# Using MCR2! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      	gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME/2);
+		iter = mcrtwo(Odd_new, g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME/2, 0, &Qtm_pm_psi);
+      Qtm_minus_psi(Odd_new, Odd_new);
+	}
+
+	else if(solver_flag == GMRESDR) {
       if(g_proc_id == 0) {printf("# Using GMRES-DR! m = %d, NrEv = %d\n", 
          gmres_m_parameter, gmresdr_nr_ev); fflush(stdout);}
       mul_one_pm_imu_inv(g_spinor_field[DUM_DERI], +1., VOLUME/2);
@@ -373,6 +380,13 @@ int invert_eo(spinor * const Even_new, spinor * const Odd_new,
       /* iter = mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &D_psi); */
       gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
       iter = mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_plus_psi);
+      /*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
+    }
+    else if(solver_flag == MCRTWO) {
+      if(g_proc_id == 0) {printf("# Using mCR2! m = %d\n", gmres_m_parameter); fflush(stdout);}
+      /* iter = mcr(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &D_psi); */
+      gamma5(g_spinor_field[DUM_DERI], g_spinor_field[DUM_DERI], VOLUME);
+      iter = mcrtwo(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI], gmres_m_parameter, max_iter/gmres_m_parameter, precision, rel_prec, VOLUME, 0, &Q_plus_psi);
       /*       Q_minus_psi(g_spinor_field[DUM_DERI+1], g_spinor_field[DUM_DERI]); */
     }
  

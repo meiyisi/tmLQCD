@@ -36,6 +36,7 @@
 #define MIXEDCG 13
 #define MCR 14
 #define BICG 15
+#define MCRTWO 16
 
 #include"solver/matrix_mult_typedef.h"
 

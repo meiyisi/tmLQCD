@@ -28,4 +28,10 @@ int mcr(spinor * const P, spinor * const Q,
 	const double eps_sq, const int rel_prec,
 	const int N, const int precon, matrix_mult f);
 
+int mcrtwo(spinor * const P, spinor * const Q, 
+	const int m, const int max_restarts,
+	const double eps_sq, const int rel_prec,
+	const int N, const int precon, matrix_mult f);
+
+
 #endif

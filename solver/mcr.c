@@ -117,11 +117,6 @@ int mcr(spinor * const P, spinor * const Q,
 	
 			err = square_norm(chi, N, 1);
 			iter ++;
-//#ifdef MPI
-//			etime = MPI_Wtime();
-//#else
-//			etime = ((double)clock())/((double)(CLOCKS_PER_SEC));
-//#endif
 			etime = gettime();
 			if(g_proc_id == g_stdio_proc && g_debug_level > 3){
 				printf("# mCR: %d\t%g iterated residue, time spent %f s\n", iter, err, (etime - atime)); 
@@ -164,6 +159,133 @@ int mcr(spinor * const P, spinor * const Q,
         err = square_norm(chi, N, 1);
         if(g_proc_id == g_stdio_proc && g_debug_level > 0){
             printf("mCR: %d\t%g true residue\n", iter, err); 
+            fflush(stdout);
+        }
+        if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
+			finalize_solver(solver_field, nr_sf);
+            return(iter);
+        }
+    }
+	g_sloppy_precision = save_sloppy;
+	finalize_solver(solver_field, nr_sf);
+	return(-1);
+}
+
+int mcrtwo(spinor * const P, spinor * const Q, 
+		const int m, const int max_restarts,
+		const double eps_sq, const int rel_prec,
+		const int N, const int precon, matrix_mult f) {
+
+	int k, l, restart, i, iter = 0;
+	double norm_sq, err;
+	spinor * xi, * Axi, * chi, * Achi, *tmp;
+	_Complex double alpha, beta, rho, rhonew;
+	static _Complex double one = 1.0;
+	double norm;
+	double atime, etime;
+	spinor ** solver_field = NULL;
+	const int nr_sf = 5;
+  	int save_sloppy = g_sloppy_precision;
+
+	if(N == VOLUME) {
+		init_solver_field(&solver_field, VOLUMEPLUSRAND, nr_sf);
+	}
+	else {
+		init_solver_field(&solver_field, VOLUMEPLUSRAND/2, nr_sf);
+	}
+
+	atime = gettime();
+
+	xi = solver_field[0];
+	Axi = solver_field[1];
+	chi = solver_field[2];
+	Achi = solver_field[3];
+	tmp = solver_field[4];
+
+	norm_sq = square_norm(Q, N, 1);
+	if(norm_sq < 1.e-32) {
+		norm_sq = 1.;
+	}
+
+	for(restart = 0; restart < max_restarts; restart++) {
+		dfl_sloppy_prec = 0;
+		f(tmp, P);
+		diff(chi, Q, tmp, N);
+		assign(xi, chi, N);
+		f(Axi, xi);
+		rho = scalar_prod(Axi, chi, N, 1);
+		err = square_norm(chi, N, 1);
+		if(g_proc_id == g_stdio_proc && g_debug_level > 2){
+			printf("mCR2: iteration number: %d true residue: %g\n", iter, err); 
+			fflush(stdout);
+		}
+		if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
+			finalize_solver(solver_field, nr_sf);
+			return(iter);
+		}
+
+		for(k = 0; k < m; k++) {
+			/* preconditioning not implemented */
+			dfl_sloppy_prec = 1;
+
+            norm = square_norm(Axi, N, 1);
+            alpha = rho/norm;
+			//if (g_proc_id == g_stdio_proc)
+			//	printf("alpha = %f + %fI\n", creal(alpha), cimag(alpha));
+            assign_add_mul(P, xi, alpha, N);
+            /* get the new residual */
+            assign_diff_mul(chi, Axi, alpha, N);
+	
+			f(Achi, chi);
+			rhonew = scalar_prod(Achi, chi, N, 1);
+			/* We solve Q instead of iQ in invert_eo.c, so here we use -cimag instead of creal */
+			//if (g_proc_id == g_stdio_proc)
+			//	printf("residue is %g\n", -cimag(rhonew)/g_mu);	
+			//err = square_norm(chi, N, 1);
+			err = -cimag(rhonew)/g_mu;
+			iter ++;
+			etime = gettime();
+			if(g_proc_id == g_stdio_proc && g_debug_level > 3){
+				printf("# mCR2: %d\t%g iterated residue, time spent %f s\n", iter, err, (etime - atime)); 
+				fflush(stdout);
+			}
+			/* Precision reached? */
+			if((k == m-1) || ((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {
+				break;
+			}
+
+
+			#ifdef _USE_HALFSPINOR
+    		if(((err*err <= eps_sq) && (rel_prec == 0)) || ((err*err <= eps_sq*norm_sq) && (rel_prec == 1))) {
+				if (g_sloppy_precision_flag == 1) {
+      				g_sloppy_precision = 1;
+      				if(g_debug_level > 2 && g_proc_id == g_stdio_proc) {
+        				printf("sloppy precision on\n"); fflush( stdout);
+      				}
+				}
+    		}
+			#endif
+			/* We solve Q=gamma5D instead of iQ in invert_eo.c */
+			/* the sign is different from Philippe's note. */
+			beta = rhonew/conj(rho);
+			
+			//if (g_proc_id == g_stdio_proc)
+			//	printf("beta = %f + %fI\n", creal(beta), cimag(beta));
+            assign_mul_add_mul(xi, beta, chi, one, N);
+            assign_mul_add_mul(Axi,beta, Achi, one, N);
+			rho = rhonew;
+		}
+
+	}
+
+    /* check if the iteration converges in the last restart cycle */
+    if (restart == max_restarts) {
+        f(tmp, P);
+        diff(chi, Q, tmp, N);
+
+        err = square_norm(chi, N, 1);
+        if(g_proc_id == g_stdio_proc && g_debug_level > 0){
+            printf("mCR2: %d\t%g true residue\n", iter, err); 
             fflush(stdout);
         }
         if(((err <= eps_sq) && (rel_prec == 0)) || ((err <= eps_sq*norm_sq) && (rel_prec == 1))) {

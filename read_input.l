@@ -794,6 +794,11 @@ inline void rmQuotes(char *str){
     if(myverbose) printf("  Solver set to mCR line %d operator %d\n", line_of_file, current_operator);
     BEGIN(name_caller);
   }
+  mcrtwo {
+	optr->solver=16;
+    if(myverbose) printf("  Solver set to mCR2 line %d operator %d\n", line_of_file, current_operator);
+    BEGIN(name_caller);
+  }
  
   gmresdr {
     optr->solver=8;
